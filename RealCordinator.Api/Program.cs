@@ -9,7 +9,14 @@ var builder = WebApplication.CreateBuilder(args);
 // JWT CONFIG
 // =============================
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
+var jwtKey = jwtSettings["Key"];
+
+if (string.IsNullOrEmpty(jwtKey))
+{
+    throw new Exception("JWT Key is missing. Set Jwt__Key in environment variables.");
+}
+
+var key = Encoding.UTF8.GetBytes(jwtKey);
 
 // =============================
 // SERVICES
@@ -17,8 +24,17 @@ var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+// =============================
+// SWAGGER + JWT AUTH
+// =============================
 builder.Services.AddSwaggerGen(options =>
 {
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "RealCordinator API",
+        Version = "v1"
+    });
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -40,12 +56,14 @@ builder.Services.AddSwaggerGen(options =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
 
-// Authentication
+// =============================
+// AUTHENTICATION
+// =============================
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
@@ -55,6 +73,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
+
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key)
@@ -68,13 +87,17 @@ var app = builder.Build();
 // =============================
 // MIDDLEWARE
 // =============================
-if (app.Environment.IsDevelopment())
+
+// 🔥 Swagger ENABLED IN PRODUCTION (Render)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "RealCordinator API v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
