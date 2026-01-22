@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using RealCordinator.Api.Data;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,19 @@ if (string.IsNullOrEmpty(jwtKey))
 }
 
 var key = Encoding.UTF8.GetBytes(jwtKey);
+
+// =============================
+// DATABASE (MYSQL)
+// =============================
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+
+    if (string.IsNullOrEmpty(conn))
+        throw new Exception("Database connection string is missing.");
+
+    options.UseMySql(conn, ServerVersion.AutoDetect(conn));
+});
 
 // =============================
 // SERVICES
@@ -73,7 +88,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key)
@@ -87,8 +101,6 @@ var app = builder.Build();
 // =============================
 // MIDDLEWARE
 // =============================
-
-// 🔥 Swagger ENABLED IN PRODUCTION (Render)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -97,7 +109,6 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
