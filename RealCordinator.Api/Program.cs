@@ -30,7 +30,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     if (string.IsNullOrEmpty(conn))
         throw new Exception("Database connection string is missing.");
 
-    options.UseMySql(conn, ServerVersion.AutoDetect(conn));
+    options.UseMySql(
+      conn,
+      new MySqlServerVersion(new Version(8, 0, 36))
+  );
 });
 
 // =============================
