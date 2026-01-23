@@ -6,28 +6,24 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
- <ItemGroup>
-  <!-- ASP.NET Core -->
-  <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
-  <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.11" />
+  <ItemGroup>
+    <!-- JWT -->
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
 
-  <!-- Entity Framework Core -->
-  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
-  <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
-    <PrivateAssets>all</PrivateAssets>
-  </PackageReference>
+    <!-- Swagger -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
 
-  <!-- MySQL Provider (MATCHES EF 8) -->
-  <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
+    <!-- Entity Framework Core (EXPLICIT v8) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
 
-  <!-- JWT -->
-  <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
-  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
-
-  <!-- Swagger -->
-  <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-</ItemGroup>
-
+    <!-- MySQL Provider (MATCHES EF 8) -->
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
+  </ItemGroup>
 
 </Project>

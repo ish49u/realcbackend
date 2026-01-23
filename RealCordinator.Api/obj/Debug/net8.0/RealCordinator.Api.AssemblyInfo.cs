@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RealCordinator.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9717f780b316f9a9eb115465aaa2dc5b44f70021")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9f42eec52cd98e4211b63b57c702df5c23dd5251")]
 [assembly: System.Reflection.AssemblyProductAttribute("RealCordinator.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RealCordinator.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
