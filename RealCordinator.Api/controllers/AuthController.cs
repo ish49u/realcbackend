@@ -15,82 +15,116 @@ namespace RealCordinator.Api.Controllers
     {
         private readonly AppDbContext _db;
         private readonly IConfiguration _config;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(AppDbContext db, IConfiguration config)
+        public AuthController(
+            AppDbContext db,
+            IConfiguration config,
+            ILogger<AuthController> logger)
         {
             _db = db;
             _config = config;
+            _logger = logger;
         }
 
         // ================= REGISTER =================
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.Password))
+            try
             {
-                return BadRequest(new { error = "Email and password are required" });
+                _logger.LogInformation("REGISTER REQUEST: {Email}", request.Email);
+
+                if (string.IsNullOrWhiteSpace(request.Email) ||
+                    string.IsNullOrWhiteSpace(request.Password))
+                {
+                    return BadRequest(new { error = "Email and password are required" });
+                }
+
+                var exists = await _db.Users.AnyAsync(u => u.Email == request.Email);
+                if (exists)
+                {
+                    return BadRequest(new { error = "Email already registered" });
+                }
+
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+                var user = new User
+                {
+                    Email = request.Email,
+                    PasswordHash = hashedPassword
+                };
+
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+
+                _logger.LogInformation("USER REGISTERED: {Email}", request.Email);
+
+                return Ok(new
+                {
+                    message = "User registered successfully"
+                });
             }
-
-            // Check if user already exists
-            var exists = await _db.Users.AnyAsync(u => u.Email == request.Email);
-            if (exists)
+            catch (Exception ex)
             {
-                return BadRequest(new { error = "Email already registered" });
+                _logger.LogError(ex, "REGISTER FAILED");
+
+                return StatusCode(500, new
+                {
+                    error = "Register failed",
+                    details = ex.Message
+                });
             }
-
-            // Hash password
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-            var user = new User
-            {
-                Email = request.Email,
-                PasswordHash = hashedPassword
-            };
-
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
-
-            return Ok(new
-            {
-                message = "User registered successfully"
-            });
         }
 
         // ================= LOGIN =================
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.Password))
+            try
             {
-                return BadRequest(new { error = "Email and password are required" });
+                _logger.LogInformation("LOGIN REQUEST: {Email}", request.Email);
+
+                if (string.IsNullOrWhiteSpace(request.Email) ||
+                    string.IsNullOrWhiteSpace(request.Password))
+                {
+                    return BadRequest(new { error = "Email and password are required" });
+                }
+
+                var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+                if (user == null)
+                {
+                    return Unauthorized(new { error = "Invalid credentials" });
+                }
+
+                var validPassword = BCrypt.Net.BCrypt.Verify(
+                    request.Password,
+                    user.PasswordHash
+                );
+
+                if (!validPassword)
+                {
+                    return Unauthorized(new { error = "Invalid credentials" });
+                }
+
+                var token = GenerateJwtToken(user);
+
+                return Ok(new
+                {
+                    message = "Login successful",
+                    token
+                });
             }
-
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-            if (user == null)
+            catch (Exception ex)
             {
-                return Unauthorized(new { error = "Invalid credentials" });
+                _logger.LogError(ex, "LOGIN FAILED");
+
+                return StatusCode(500, new
+                {
+                    error = "Login failed",
+                    details = ex.Message
+                });
             }
-
-            // Verify password
-            var isValidPassword = BCrypt.Net.BCrypt.Verify(
-                request.Password,
-                user.PasswordHash
-            );
-
-            if (!isValidPassword)
-            {
-                return Unauthorized(new { error = "Invalid credentials" });
-            }
-
-            var token = GenerateJwtToken(user);
-
-            return Ok(new
-            {
-                message = "Login successful",
-                token = token
-            });
         }
 
         // ================= JWT TOKEN =================
