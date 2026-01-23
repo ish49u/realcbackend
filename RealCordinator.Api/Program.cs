@@ -31,9 +31,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         throw new Exception("Database connection string is missing.");
 
     options.UseMySql(
-      conn,
-      new MySqlServerVersion(new Version(8, 0, 36))
-  );
+       conn,
+       new MySqlServerVersion(new Version(8, 0, 36)),
+       mySqlOptions =>
+       {
+           mySqlOptions.EnableRetryOnFailure(
+               maxRetryCount: 5,
+               maxRetryDelay: TimeSpan.FromSeconds(10),
+               errorNumbersToAdd: null
+           );
+       }
+   );
 });
 
 // =============================
