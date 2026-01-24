@@ -6,6 +6,8 @@ using RealCordinator.Api.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Google.Apis.Auth;
+using RealCordinator.Api.DTOs;
 
 namespace RealCordinator.Api.Controllers
 {
@@ -126,6 +128,64 @@ namespace RealCordinator.Api.Controllers
                 });
             }
         }
+
+        [HttpPost("google")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.IdToken))
+                {
+                    return BadRequest(new { error = "Google token is required" });
+                }
+
+                // ✅ Verify token with Google
+                var payload = await GoogleJsonWebSignature.ValidateAsync(
+                    request.IdToken,
+                    new GoogleJsonWebSignature.ValidationSettings
+                    {
+                        Audience = new[]
+                        {
+                    _config["GoogleAuth:ClientId"] // WEB CLIENT ID
+                        }
+                    });
+
+                // 🔍 Find user
+                var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == payload.Email);
+
+                // 🆕 Create user if not exists
+                if (user == null)
+                {
+                    user = new User
+                    {
+                        Email = payload.Email,
+                        PasswordHash = "GOOGLE_AUTH"
+                    };
+
+                    _db.Users.Add(user);
+                    await _db.SaveChangesAsync();
+                }
+
+                var token = GenerateJwtToken(user);
+
+                return Ok(new
+                {
+                    message = "Google login successful",
+                    token
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GOOGLE LOGIN FAILED");
+
+                return Unauthorized(new
+                {
+                    error = "Invalid Google token",
+                    details = ex.Message
+                });
+            }
+        }
+
 
         // ================= JWT TOKEN =================
         private string GenerateJwtToken(User user)
