@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RealCordinator.Api.Data;
 using System.Text;
+using RealCordinator.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // =============================
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddScoped<EmailService>();
 
 // =============================
 // SWAGGER + JWT AUTH

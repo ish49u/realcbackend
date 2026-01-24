@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Text;
 using Google.Apis.Auth;
 using RealCordinator.Api.DTOs;
+using RealCordinator.Api.Services;
 
 namespace RealCordinator.Api.Controllers
 {
@@ -18,17 +19,19 @@ namespace RealCordinator.Api.Controllers
         private readonly AppDbContext _db;
         private readonly IConfiguration _config;
         private readonly ILogger<AuthController> _logger;
+        private readonly EmailService _emailService;
 
         public AuthController(
             AppDbContext db,
             IConfiguration config,
-            ILogger<AuthController> logger)
+            ILogger<AuthController> logger,
+            EmailService emailService)
         {
             _db = db;
             _config = config;
             _logger = logger;
+            _emailService = emailService;
         }
-
         // ================= REGISTER =================
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
@@ -208,11 +211,47 @@ namespace RealCordinator.Api.Controllers
             await _db.SaveChangesAsync();
 
             // TODO: Send email (next step)
-            _logger.LogInformation($"RESET TOKEN for {user.Email}: {token}");
+            var resetLink =
+      $"{_config["Frontend:ResetPasswordUrl"]}?token={token}";
+
+            await _emailService.SendResetPasswordEmail(
+                user.Email,
+                resetLink
+            );
+
+            _logger.LogInformation("Password reset email sent to {Email}", user.Email);
+
 
             return Ok(new { message = "If email exists, reset link sent" });
         }
 
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Token) ||
+                string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return BadRequest(new { error = "Token and password required" });
+            }
+
+            var user = await _db.Users.FirstOrDefaultAsync(u =>
+                u.PasswordResetToken == request.Token &&
+                u.PasswordResetExpiry > DateTime.UtcNow
+            );
+
+            if (user == null)
+            {
+                return BadRequest(new { error = "Invalid or expired token" });
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            user.PasswordResetToken = null;
+            user.PasswordResetExpiry = null;
+
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Password reset successful" });
+        }
         // ================= JWT TOKEN =================
         private string GenerateJwtToken(User user)
         {
