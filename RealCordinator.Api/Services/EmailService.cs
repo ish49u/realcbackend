@@ -96,5 +96,40 @@ namespace RealCordinator.Api.Services
                 throw new Exception("SendGrid reset email failed");
             }
         }
+        public async Task SendResetCodeEmail(string toEmail, string code)
+        {
+            var apiKey = _config["SENDGRID_API_KEY"];
+            var fromEmail = _config["FROM_EMAIL"];
+
+            if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(fromEmail))
+                throw new Exception("SendGrid configuration missing");
+
+            var client = new SendGridClient(apiKey);
+
+            var from = new EmailAddress(fromEmail, "RealCordinator");
+            var to = new EmailAddress(toEmail);
+
+            var subject = "Your password reset code";
+
+            var html = $@"
+        <h2>Password Reset</h2>
+        <p>Your reset code is:</p>
+        <h1 style='letter-spacing:4px'>{code}</h1>
+        <p>This code expires in 10 minutes.</p>
+    ";
+
+            var msg = MailHelper.CreateSingleEmail(
+                from,
+                to,
+                subject,
+                code,
+                html
+            );
+
+            var response = await client.SendEmailAsync(msg);
+
+            if ((int)response.StatusCode >= 400)
+                throw new Exception("SendGrid reset code email failed");
+        }
     }
 }

@@ -232,67 +232,54 @@ namespace RealCordinator.Api.Controllers
 
 
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Email))
                 return BadRequest(new { error = "Email is required" });
 
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
-            // IMPORTANT: Do NOT reveal if user exists
             if (user == null)
-                return Ok(new { message = "If email exists, reset link sent" });
+                return Ok(new { message = "If email exists, code sent" });
 
-            // Generate token
-            var token = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            var code = new Random().Next(100000, 999999).ToString();
 
-            user.PasswordResetToken = token;
-            user.PasswordResetExpiry = DateTime.UtcNow.AddMinutes(30);
+            user.PasswordResetCode = code;
+            user.PasswordResetExpiry = DateTime.UtcNow.AddMinutes(10);
 
             await _db.SaveChangesAsync();
 
-            // TODO: Send email (next step)
-            var resetLink =
-      $"{_config["Frontend:ResetPasswordUrl"]}?token={token}";
+            await _emailService.SendResetCodeEmail(user.Email, code);
 
-            await _emailService.SendResetPasswordEmail(
-                user.Email,
-                resetLink
-            );
-
-            _logger.LogInformation("Password reset email sent to {Email}", user.Email);
-
-
-            return Ok(new { message = "If email exists, reset link sent" });
+            return Ok(new { message = "Reset code sent" });
         }
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Token) ||
+            if (string.IsNullOrWhiteSpace(request.Code) ||
                 string.IsNullOrWhiteSpace(request.NewPassword))
             {
-                return BadRequest(new { error = "Token and password required" });
+                return BadRequest(new { error = "Code and password required" });
             }
 
             var user = await _db.Users.FirstOrDefaultAsync(u =>
-                u.PasswordResetToken == request.Token &&
+                u.PasswordResetCode == request.Code &&
                 u.PasswordResetExpiry > DateTime.UtcNow
             );
 
             if (user == null)
-            {
-                return BadRequest(new { error = "Invalid or expired token" });
-            }
+                return BadRequest(new { error = "Invalid or expired code" });
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-            user.PasswordResetToken = null;
+            user.PasswordResetCode = null;
             user.PasswordResetExpiry = null;
 
             await _db.SaveChangesAsync();
 
             return Ok(new { message = "Password reset successful" });
         }
+
         // ================= JWT TOKEN =================
         private string GenerateJwtToken(User user)
         {

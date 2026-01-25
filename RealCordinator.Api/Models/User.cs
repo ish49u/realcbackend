@@ -7,7 +7,7 @@ namespace RealCordinator.Api.Models
         public string PasswordHash { get; set; } = null!;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public string? PasswordResetToken { get; set; }
+        public string? PasswordResetCode { get; set; }
         public DateTime? PasswordResetExpiry { get; set; }
 
         public bool IsEmailVerified { get; set; } = false;
