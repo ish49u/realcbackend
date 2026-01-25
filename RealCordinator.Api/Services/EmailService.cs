@@ -1,5 +1,5 @@
-using System.Net;
-using System.Net.Mail;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace RealCordinator.Api.Services
 {
@@ -12,96 +12,69 @@ namespace RealCordinator.Api.Services
             _config = config;
         }
 
-        public async Task SendResetPasswordEmail(string toEmail, string resetLink)
+        public async Task SendVerificationEmail(string toEmail, string verifyLink)
         {
-            var smtpHost = _config["Email:SmtpHost"];
-            var smtpPort = int.Parse(_config["Email:SmtpPort"]!);
-            var smtpUser = _config["Email:Username"];
-            var smtpPass = _config["Email:Password"];
-            var fromEmail = _config["Email:From"]!;
+            var apiKey = _config["SENDGRID_API_KEY"];
+            var fromEmail = _config["FROM_EMAIL"];
 
-            var message = new MailMessage
+            if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(fromEmail))
+                throw new Exception("SendGrid configuration missing");
+
+            var client = new SendGridClient(apiKey);
+
+            var from = new EmailAddress(fromEmail, "RealCordinator");
+            var to = new EmailAddress(toEmail);
+
+            var subject = "Verify your email";
+            var plainText = $"Please verify your email:\n\n{verifyLink}";
+            var html = $"<p>Please verify your email:</p><a href='{verifyLink}'>Verify Email</a>";
+
+            var msg = MailHelper.CreateSingleEmail(
+                from,
+                to,
+                subject,
+                plainText,
+                html
+            );
+
+            var response = await client.SendEmailAsync(msg);
+
+            if ((int)response.StatusCode >= 400)
             {
-                From = new MailAddress(fromEmail, "RealCordinator"),
-                Subject = "Reset your password",
-                Body = $@"
-Hello,
-
-You requested a password reset.
-
-Click the link below to reset your password:
-{resetLink}
-
-This link will expire in 30 minutes.
-
-If you did not request this, please ignore this email.
-
-— RealCordinator Team
-",
-                IsBodyHtml = false
-            };
-
-            message.To.Add(toEmail);
-
-            var client = new SmtpClient(smtpHost, smtpPort)
-            {
-                Credentials = new NetworkCredential(smtpUser, smtpPass),
-                EnableSsl = true
-            };
-
-            try
-            {
-                await client.SendMailAsync(message);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("EMAIL RESET ERROR: " + ex.Message);
-                throw;
+                throw new Exception("SendGrid verification email failed");
             }
         }
 
-        public async Task SendVerificationEmail(string toEmail, string verifyLink)
+        public async Task SendResetPasswordEmail(string toEmail, string resetLink)
         {
-            var smtpHost = _config["Email:SmtpHost"];
-            var smtpPort = int.Parse(_config["Email:SmtpPort"]!);
-            var smtpUser = _config["Email:Username"];
-            var smtpPass = _config["Email:Password"];
-            var fromEmail = _config["Email:From"]!;
+            var apiKey = _config["SENDGRID_API_KEY"];
+            var fromEmail = _config["FROM_EMAIL"];
 
-            var message = new MailMessage
+            if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(fromEmail))
+                throw new Exception("SendGrid configuration missing");
+
+            var client = new SendGridClient(apiKey);
+
+            var from = new EmailAddress(fromEmail, "RealCordinator");
+            var to = new EmailAddress(toEmail);
+
+            var subject = "Reset your password";
+            var plainText = $"Reset your password:\n\n{resetLink}";
+            var html = $"<p>Reset your password:</p><a href='{resetLink}'>Reset Password</a>";
+
+            var msg = MailHelper.CreateSingleEmail(
+                from,
+                to,
+                subject,
+                plainText,
+                html
+            );
+
+            var response = await client.SendEmailAsync(msg);
+
+            if ((int)response.StatusCode >= 400)
             {
-                From = new MailAddress(fromEmail, "RealCordinator"),
-                Subject = "Verify your email",
-                Body = $@"
-Hello,
-
-Please verify your email by clicking the link below:
-
-{verifyLink}
-
-This link expires in 24 hours.
-
-— RealCordinator Team
-",
-                IsBodyHtml = false
-            };
-
-            message.To.Add(toEmail);
-
-            var client = new SmtpClient(smtpHost, smtpPort)
-            {
-                Credentials = new NetworkCredential(smtpUser, smtpPass),
-                EnableSsl = true
-            };
-
-            try
-            {
-                await client.SendMailAsync(message);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("EMAIL VERIFICATION ERROR: " + ex.Message);
-                throw;
+                throw new Exception("SendGrid reset email failed");
             }
         }
     }
