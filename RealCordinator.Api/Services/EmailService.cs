@@ -15,10 +15,10 @@ namespace RealCordinator.Api.Services
         public async Task SendResetPasswordEmail(string toEmail, string resetLink)
         {
             var smtpHost = _config["Email:SmtpHost"];
-            var smtpPort = int.Parse(_config["Email:SmtpPort"]);
+            var smtpPort = int.Parse(_config["Email:SmtpPort"]!);
             var smtpUser = _config["Email:Username"];
             var smtpPass = _config["Email:Password"];
-            var fromEmail = _config["Email:From"];
+            var fromEmail = _config["Email:From"]!;
 
             var message = new MailMessage
             {
@@ -49,7 +49,15 @@ If you did not request this, please ignore this email.
                 EnableSsl = true
             };
 
-            await client.SendMailAsync(message);
+            try
+            {
+                await client.SendMailAsync(message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("EMAIL RESET ERROR: " + ex.Message);
+                throw;
+            }
         }
 
         public async Task SendVerificationEmail(string toEmail, string verifyLink)
@@ -58,11 +66,11 @@ If you did not request this, please ignore this email.
             var smtpPort = int.Parse(_config["Email:SmtpPort"]!);
             var smtpUser = _config["Email:Username"];
             var smtpPass = _config["Email:Password"];
-            var fromEmail = _config["Email:From"];
+            var fromEmail = _config["Email:From"]!;
 
             var message = new MailMessage
             {
-                From = new MailAddress(fromEmail!, "RealCordinator"),
+                From = new MailAddress(fromEmail, "RealCordinator"),
                 Subject = "Verify your email",
                 Body = $@"
 Hello,
@@ -86,8 +94,15 @@ This link expires in 24 hours.
                 EnableSsl = true
             };
 
-            await client.SendMailAsync(message);
+            try
+            {
+                await client.SendMailAsync(message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("EMAIL VERIFICATION ERROR: " + ex.Message);
+                throw;
+            }
         }
-
     }
 }
