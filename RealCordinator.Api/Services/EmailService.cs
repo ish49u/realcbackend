@@ -60,7 +60,26 @@ namespace RealCordinator.Api.Services
 
             var subject = "Reset your password";
             var plainText = $"Reset your password:\n\n{resetLink}";
-            var html = $"<p>Reset your password:</p><a href='{resetLink}'>Reset Password</a>";
+            var html = $@"
+<div style='font-family:Arial, sans-serif;'>
+    <h2>Reset your password</h2>
+    <p>Click the button below to reset your password:</p>
+
+    <a href='{resetLink}'
+       style='display:inline-block;
+              padding:12px 20px;
+              background-color:#dc2626;
+              color:#ffffff;
+              text-decoration:none;
+              border-radius:6px;
+              font-weight:bold;'>
+        Reset Password
+    </a>
+
+    <p style='margin-top:16px; font-size:12px; color:#666;'>
+        This link will expire in 30 minutes.
+    </p>
+</div>";
 
             var msg = MailHelper.CreateSingleEmail(
                 from,
