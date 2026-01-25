@@ -6,6 +6,9 @@ C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Deb
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\RealCordinator.Api.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\RealCordinator.Api.pdb
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\BCrypt.Net-Next.dll
+C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Google.Apis.dll
+C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Google.Apis.Auth.dll
+C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Google.Apis.Core.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Humanizer.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
@@ -33,6 +36,7 @@ C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Deb
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Microsoft.OpenApi.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Mono.TextTemplating.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\MySqlConnector.dll
+C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Newtonsoft.Json.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Pomelo.EntityFrameworkCore.MySql.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
@@ -44,6 +48,7 @@ C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Deb
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\System.Composition.Runtime.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\System.Composition.TypedParts.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\System.Management.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.resources.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.resources.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.resources.dll
@@ -96,6 +101,7 @@ C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Deb
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.Workspaces.resources.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.resources.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Management.dll
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\obj\Debug\net8.0\RealCordinator.Api.csproj.AssemblyReference.cache
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\obj\Debug\net8.0\RealCordinator.Api.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\ISHU DHIMAN\Desktop\real_coordinator_backend\RealCordinator.Api\obj\Debug\net8.0\RealCordinator.Api.AssemblyInfoInputs.cache

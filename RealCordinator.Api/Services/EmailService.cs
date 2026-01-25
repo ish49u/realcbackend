@@ -51,5 +51,43 @@ If you did not request this, please ignore this email.
 
             await client.SendMailAsync(message);
         }
+
+        public async Task SendVerificationEmail(string toEmail, string verifyLink)
+        {
+            var smtpHost = _config["Email:SmtpHost"];
+            var smtpPort = int.Parse(_config["Email:SmtpPort"]!);
+            var smtpUser = _config["Email:Username"];
+            var smtpPass = _config["Email:Password"];
+            var fromEmail = _config["Email:From"];
+
+            var message = new MailMessage
+            {
+                From = new MailAddress(fromEmail!, "RealCordinator"),
+                Subject = "Verify your email",
+                Body = $@"
+Hello,
+
+Please verify your email by clicking the link below:
+
+{verifyLink}
+
+This link expires in 24 hours.
+
+— RealCordinator Team
+",
+                IsBodyHtml = false
+            };
+
+            message.To.Add(toEmail);
+
+            var client = new SmtpClient(smtpHost, smtpPort)
+            {
+                Credentials = new NetworkCredential(smtpUser, smtpPass),
+                EnableSsl = true
+            };
+
+            await client.SendMailAsync(message);
+        }
+
     }
 }

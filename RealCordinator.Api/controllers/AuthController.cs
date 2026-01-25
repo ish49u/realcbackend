@@ -54,20 +54,34 @@ namespace RealCordinator.Api.Controllers
 
                 var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
+                var verificationToken = Guid.NewGuid().ToString();
+
                 var user = new User
                 {
                     Email = request.Email,
-                    PasswordHash = hashedPassword
+                    PasswordHash = hashedPassword,
+                    IsEmailVerified = false,
+                    EmailVerificationToken = verificationToken,
+                    EmailVerificationExpiry = DateTime.UtcNow.AddHours(24)
                 };
 
                 _db.Users.Add(user);
                 await _db.SaveChangesAsync();
 
-                _logger.LogInformation("USER REGISTERED: {Email}", request.Email);
+                // SEND VERIFICATION EMAIL
+                var verifyLink =
+                    $"{Request.Scheme}://{Request.Host}/api/auth/verify-email?token={verificationToken}";
+
+                await _emailService.SendVerificationEmail(
+                    user.Email,
+                    verifyLink
+                );
+
+                _logger.LogInformation("USER REGISTERED (UNVERIFIED): {Email}", request.Email);
 
                 return Ok(new
                 {
-                    message = "User registered successfully"
+                    message = "Verification email sent"
                 });
             }
             catch (Exception ex)
@@ -107,9 +121,12 @@ namespace RealCordinator.Api.Controllers
                     user.PasswordHash
                 );
 
-                if (!validPassword)
+                if (!user.IsEmailVerified)
                 {
-                    return Unauthorized(new { error = "Invalid credentials" });
+                    return Unauthorized(new
+                    {
+                        error = "Please verify your email before logging in"
+                    });
                 }
 
                 var token = GenerateJwtToken(user);
@@ -131,6 +148,28 @@ namespace RealCordinator.Api.Controllers
                 });
             }
         }
+
+
+        [HttpGet("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u =>
+                u.EmailVerificationToken == token &&
+                u.EmailVerificationExpiry > DateTime.UtcNow
+            );
+
+            if (user == null)
+                return BadRequest("Invalid or expired verification link");
+
+            user.IsEmailVerified = true;
+            user.EmailVerificationToken = null;
+            user.EmailVerificationExpiry = null;
+
+            await _db.SaveChangesAsync();
+
+            return Ok("Email verified successfully. You can now log in.");
+        }
+
 
         [HttpPost("google")]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
@@ -162,8 +201,10 @@ namespace RealCordinator.Api.Controllers
                     user = new User
                     {
                         Email = payload.Email,
-                        PasswordHash = "GOOGLE_AUTH"
+                        PasswordHash = "GOOGLE_AUTH",
+                        IsEmailVerified = true
                     };
+
 
                     _db.Users.Add(user);
                     await _db.SaveChangesAsync();
