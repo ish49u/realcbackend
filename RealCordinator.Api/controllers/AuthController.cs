@@ -50,29 +50,22 @@ namespace RealCordinator.Api.Controllers
                     return BadRequest(new { error = "Email already registered" });
                 }
 
-                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-                // ✅ GENERATE 6-DIGIT CODE
+                // ✅ Generate verification code
                 var code = new Random().Next(100000, 999999).ToString();
 
-                var user = new User
-                {
-                    Email = request.Email,
-                    PasswordHash = hashedPassword,
-                    IsEmailVerified = false,
-                    EmailVerificationCode = code,
-                    EmailVerificationExpiry = DateTime.UtcNow.AddMinutes(10)
-                };
+                // ✅ TEMP STORE (memory only)
+                TempUserStore.Save(
+                    request.Email,
+                    request.Password,
+                    code
+                );
 
-                _db.Users.Add(user);
-                await _db.SaveChangesAsync();
-
-                // ✅ SEND CODE EMAIL
-                await _emailService.SendResetCodeEmail(user.Email, code);
+                // ✅ Send email
+                await _emailService.SendResetCodeEmail(request.Email, code);
 
                 return Ok(new
                 {
-                    message = "Verification code sent to email"
+                    message = "Verification code sent"
                 });
             }
             catch (Exception ex)
@@ -151,22 +144,22 @@ namespace RealCordinator.Api.Controllers
                 return BadRequest(new { error = "Email and code required" });
             }
 
-            var user = await _db.Users.FirstOrDefaultAsync(u =>
-                u.Email == request.Email &&
-                u.EmailVerificationCode == request.Code &&
-                u.EmailVerificationExpiry > DateTime.UtcNow
-            );
-
-            if (user == null)
+            if (!TempUserStore.Validate(request.Email, request.Code, out var password))
+            {
                 return BadRequest(new { error = "Invalid or expired code" });
+            }
 
-            user.IsEmailVerified = true;
-            user.EmailVerificationCode = null;
-            user.EmailVerificationExpiry = null;
+            var user = new User
+            {
+                Email = request.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                IsEmailVerified = true
+            };
 
+            _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
-            return Ok(new { message = "Email verified successfully" });
+            return Ok(new { message = "Email verified & account created" });
         }
 
         [HttpPost("google")]
