@@ -12,7 +12,7 @@ namespace RealCordinator.Api.Services
             _config = config;
         }
 
-        public async Task SendVerificationEmail(string toEmail, string verifyLink)
+        public async Task SendEmailVerificationCode(string toEmail, string code)
         {
             var apiKey = _config["SENDGRID_API_KEY"];
             var fromEmail = _config["FROM_EMAIL"];
@@ -25,24 +25,32 @@ namespace RealCordinator.Api.Services
             var from = new EmailAddress(fromEmail, "RealCordinator");
             var to = new EmailAddress(toEmail);
 
-            var subject = "Verify your email";
-            var plainText = $"Please verify your email:\n\n{verifyLink}";
-            var html = $"<p>Please verify your email:</p><a href='{verifyLink}'>Verify Email</a>";
+            var subject = "Verify your email address";
+
+            var html = $@"
+    <div style='font-family:Arial, sans-serif;'>
+        <h2>Email Verification</h2>
+        <p>Use the following code to verify your email:</p>
+
+        <h1 style='letter-spacing:6px; color:#dc2626;'>{code}</h1>
+
+        <p style='font-size:12px; color:#666;'>
+            This code will expire in 10 minutes.
+        </p>
+    </div>";
 
             var msg = MailHelper.CreateSingleEmail(
                 from,
                 to,
                 subject,
-                plainText,
+                code,
                 html
             );
 
             var response = await client.SendEmailAsync(msg);
 
             if ((int)response.StatusCode >= 400)
-            {
-                throw new Exception("SendGrid verification email failed");
-            }
+                throw new Exception("SendGrid verification code email failed");
         }
 
         public async Task SendResetPasswordEmail(string toEmail, string resetLink)

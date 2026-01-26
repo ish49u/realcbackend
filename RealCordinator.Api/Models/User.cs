@@ -13,5 +13,7 @@ namespace RealCordinator.Api.Models
         public bool IsEmailVerified { get; set; } = false;
         public string? EmailVerificationToken { get; set; }
         public DateTime? EmailVerificationExpiry { get; set; }
+        public string? EmailVerificationCode { get; set; }
+
     }
 }

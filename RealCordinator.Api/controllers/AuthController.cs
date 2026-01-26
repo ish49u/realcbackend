@@ -38,8 +38,6 @@ namespace RealCordinator.Api.Controllers
         {
             try
             {
-                _logger.LogInformation("REGISTER REQUEST: {Email}", request.Email);
-
                 if (string.IsNullOrWhiteSpace(request.Email) ||
                     string.IsNullOrWhiteSpace(request.Password))
                 {
@@ -54,45 +52,33 @@ namespace RealCordinator.Api.Controllers
 
                 var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-                var verificationToken = Guid.NewGuid().ToString();
+                // ✅ GENERATE 6-DIGIT CODE
+                var code = new Random().Next(100000, 999999).ToString();
 
                 var user = new User
                 {
                     Email = request.Email,
                     PasswordHash = hashedPassword,
                     IsEmailVerified = false,
-                    EmailVerificationToken = verificationToken,
-                    EmailVerificationExpiry = DateTime.UtcNow.AddHours(24)
+                    EmailVerificationCode = code,
+                    EmailVerificationExpiry = DateTime.UtcNow.AddMinutes(10)
                 };
 
                 _db.Users.Add(user);
                 await _db.SaveChangesAsync();
 
-                // SEND VERIFICATION EMAIL
-                var verifyLink =
-                    $"{Request.Scheme}://{Request.Host}/api/auth/verify-email?token={verificationToken}";
-
-                await _emailService.SendVerificationEmail(
-                    user.Email,
-                    verifyLink
-                );
-
-                _logger.LogInformation("USER REGISTERED (UNVERIFIED): {Email}", request.Email);
+                // ✅ SEND CODE EMAIL
+                await _emailService.SendResetCodeEmail(user.Email, code);
 
                 return Ok(new
                 {
-                    message = "Verification email sent"
+                    message = "Verification code sent to email"
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "REGISTER FAILED");
-
-                return StatusCode(500, new
-                {
-                    error = "Register failed",
-                    details = ex.Message
-                });
+                return StatusCode(500, new { error = "Register failed" });
             }
         }
 
@@ -156,26 +142,32 @@ namespace RealCordinator.Api.Controllers
             }
         }
 
-        [HttpGet("verify-email")]
-        public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+        [HttpPost("verify-email-code")]
+        public async Task<IActionResult> VerifyEmailCode([FromBody] VerifyEmailCodeRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.Email) ||
+                string.IsNullOrWhiteSpace(request.Code))
+            {
+                return BadRequest(new { error = "Email and code required" });
+            }
+
             var user = await _db.Users.FirstOrDefaultAsync(u =>
-                u.EmailVerificationToken == token &&
+                u.Email == request.Email &&
+                u.EmailVerificationCode == request.Code &&
                 u.EmailVerificationExpiry > DateTime.UtcNow
             );
 
             if (user == null)
-                return BadRequest("Invalid or expired verification link");
+                return BadRequest(new { error = "Invalid or expired code" });
 
             user.IsEmailVerified = true;
-            user.EmailVerificationToken = null;
+            user.EmailVerificationCode = null;
             user.EmailVerificationExpiry = null;
 
             await _db.SaveChangesAsync();
 
-            return Ok("Email verified successfully. You can now log in.");
+            return Ok(new { message = "Email verified successfully" });
         }
-
 
         [HttpPost("google")]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
