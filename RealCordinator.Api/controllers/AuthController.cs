@@ -113,14 +113,21 @@ namespace RealCordinator.Api.Controllers
                 var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
                 if (user == null)
                 {
-                    return Unauthorized(new { error = "Invalid credentials" });
+                    return Unauthorized(new { error = "Invalid email or password" });
                 }
 
+                // ✅ CHECK PASSWORD
                 var validPassword = BCrypt.Net.BCrypt.Verify(
                     request.Password,
                     user.PasswordHash
                 );
 
+                if (!validPassword)
+                {
+                    return Unauthorized(new { error = "Invalid email or password" });
+                }
+
+                // ✅ CHECK EMAIL VERIFICATION
                 if (!user.IsEmailVerified)
                 {
                     return Unauthorized(new
@@ -148,7 +155,6 @@ namespace RealCordinator.Api.Controllers
                 });
             }
         }
-
 
         [HttpGet("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromQuery] string token)
