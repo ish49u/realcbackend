@@ -57,6 +57,7 @@ namespace RealCordinator.Api.Controllers
                 TempUserStore.Save(
                     request.Email,
                     request.Password,
+                    request.MemberType,
                     code
                 );
 
@@ -144,15 +145,21 @@ namespace RealCordinator.Api.Controllers
                 return BadRequest(new { error = "Email and code required" });
             }
 
-            if (!TempUserStore.Validate(request.Email, request.Code, out var password))
+            if (!TempUserStore.Validate(
+          request.Email,
+          request.Code,
+          out var password,
+          out var memberType)) // 👈 ADD
             {
                 return BadRequest(new { error = "Invalid or expired code" });
             }
+
 
             var user = new User
             {
                 Email = request.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                MemberType = memberType,
                 IsEmailVerified = true
             };
 
