@@ -166,7 +166,12 @@ namespace RealCordinator.Api.Controllers
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
-            return Ok(new { message = "Email verified & account created" });
+            return new JsonResult(new
+            {
+                success = true,
+                message = "Email verified & account created"
+            });
+
         }
 
         [HttpPost("google")]
