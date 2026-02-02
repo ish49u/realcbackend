@@ -238,9 +238,11 @@ namespace RealCordinator.Api.Controllers
 
                 return Ok(new
                 {
-                    message = "Google login successful",
-                    token
+                    message = "Login successful",
+                    token,
+                    memberType = user.MemberType
                 });
+
             }
             catch (Exception ex)
             {
