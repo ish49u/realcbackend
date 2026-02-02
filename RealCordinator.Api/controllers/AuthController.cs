@@ -139,39 +139,60 @@ namespace RealCordinator.Api.Controllers
         [HttpPost("verify-email-code")]
         public async Task<IActionResult> VerifyEmailCode([FromBody] VerifyEmailCodeRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.Code))
+            try
             {
-                return BadRequest(new { error = "Email and code required" });
+                if (string.IsNullOrWhiteSpace(request.Email) ||
+                    string.IsNullOrWhiteSpace(request.Code))
+                {
+                    return BadRequest(new { error = "Email and code required" });
+                }
+
+                if (!TempUserStore.Validate(
+                    request.Email,
+                    request.Code,
+                    out var password,
+                    out var memberType))
+                {
+                    return BadRequest(new { error = "Invalid or expired code" });
+                }
+
+                // ✅ PREVENT DUPLICATE USER (THIS WAS CRASHING)
+                var existingUser = await _db.Users
+                    .FirstOrDefaultAsync(u => u.Email == request.Email);
+
+                if (existingUser != null)
+                {
+                    return BadRequest(new
+                    {
+                        error = "User already verified. Please login."
+                    });
+                }
+
+                var user = new User
+                {
+                    Email = request.Email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                    MemberType = memberType,
+                    IsEmailVerified = true
+                };
+
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+
+                return new JsonResult(new
+                {
+                    success = true,
+                    message = "Email verified & account created"
+                });
             }
-
-            if (!TempUserStore.Validate(
-          request.Email,
-          request.Code,
-          out var password,
-          out var memberType)) // 👈 ADD
+            catch (Exception ex)
             {
-                return BadRequest(new { error = "Invalid or expired code" });
+                _logger.LogError(ex, "VERIFY EMAIL FAILED");
+                return StatusCode(500, new
+                {
+                    error = ex.Message
+                });
             }
-
-
-            var user = new User
-            {
-                Email = request.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
-                MemberType = memberType,
-                IsEmailVerified = true
-            };
-
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
-
-            return new JsonResult(new
-            {
-                success = true,
-                message = "Email verified & account created"
-            });
-
         }
 
         [HttpPost("google")]
