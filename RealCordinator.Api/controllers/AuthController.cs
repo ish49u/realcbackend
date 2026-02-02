@@ -121,8 +121,10 @@ namespace RealCordinator.Api.Controllers
                 return Ok(new
                 {
                     message = "Login successful",
-                    token
+                    token,
+                    memberType = user.MemberType
                 });
+
             }
             catch (Exception ex)
             {
