@@ -9,6 +9,7 @@ using System.Text;
 using Google.Apis.Auth;
 using RealCordinator.Api.DTOs;
 using RealCordinator.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace RealCordinator.Api.Controllers
 {
@@ -321,6 +322,7 @@ namespace RealCordinator.Api.Controllers
 
             var claims = new[]
             {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
@@ -337,6 +339,46 @@ namespace RealCordinator.Api.Controllers
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        [Authorize]
+        [HttpPost("complete-google-profile")]
+        public async Task<IActionResult> CompleteGoogleProfile(
+        [FromBody] CompleteGoogleProfileRequest request)
+        {
+            // ✅ Validate input
+            if (string.IsNullOrWhiteSpace(request.MemberType))
+            {
+                return BadRequest(new { error = "MemberType is required" });
+            }
+
+            // 1️⃣ Get userId from JWT
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { error = "Invalid token" });
+            }
+
+            // 2️⃣ Get user from DB (IMPORTANT: int.Parse)
+            var user = await _db.Users.FindAsync(int.Parse(userId));
+
+            if (user == null)
+            {
+                return NotFound(new { error = "User not found" });
+            }
+
+            // 3️⃣ Update member type
+            user.MemberType = request.MemberType;
+
+            await _db.SaveChangesAsync();
+
+            // 4️⃣ Return success
+            return Ok(new
+            {
+                message = "Profile completed",
+                memberType = user.MemberType
+            });
         }
     }
 }
