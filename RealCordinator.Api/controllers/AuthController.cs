@@ -62,6 +62,12 @@ namespace RealCordinator.Api.Controllers
                     code
                 );
 
+// 🔍 DEBUG LOGS (ADD THESE)
+Console.WriteLine("===== ABOUT TO SEND EMAIL =====");
+Console.WriteLine($"Email: {request.Email}");
+Console.WriteLine($"Code: {code}");
+Console.WriteLine($"MemberType: {request.MemberType}");
+Console.WriteLine($"Password present: {!string.IsNullOrEmpty(request.Password)}");
                 // ✅ Send email
                 await _emailService.SendResetCodeEmail(request.Email, code);
 
@@ -70,11 +76,12 @@ namespace RealCordinator.Api.Controllers
                     message = "Verification code sent"
                 });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "REGISTER FAILED");
-                return StatusCode(500, new { error = "Register failed" });
-            }
+          catch (Exception ex)
+{
+    Console.WriteLine("❌ REGISTER FAILED");
+    Console.WriteLine(ex.ToString()); // FULL stack trace
+    return StatusCode(500, new { error = ex.Message });
+}
         }
 
         // ================= LOGIN =================
